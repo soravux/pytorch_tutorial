@@ -1,0 +1,6 @@
+gentle introduction, official MNIST example (show data loading, network architecture and explicit training loop)
+How to compute a gradient (like an adversarial example)
+How to play with the parameters (state_dict, saving the graph)
+dynamic graph (conditions in the graph)
+custom dataset
+finetuning / transfer learning
