@@ -40,7 +40,6 @@ train_loader = data.DataLoader(
 
 # Definition here: https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
 model = models.resnet50(pretrained=True)
-import pdb; pdb.set_trace()
 
 # Don't train the normal layers
 for param in model.parameters():
@@ -50,9 +49,42 @@ for param in model.parameters():
 model.fc = nn.Linear(2048, 2) # New layers has requires_grad = True by default
 
 
+def printnorm_forward(self, input, output):
+    # input is a tuple of packed inputs
+    # output is a Variable. output.data is the Tensor we are interested
+    print('Inside ' + self.__class__.__name__ + ' forward')
+    print('')
+    print('input: ', type(input))
+    print('input[0]: ', type(input[0]))
+    print('output: ', type(output))
+    print('output[0]: ', type(output[0]))
+    print('')
+    print('input size:', input[0].size())
+    print('output size:', output.data.size())
+    print('output norm:', output.data.norm())
 
-#regular_input = Variable(torch.randn(1, 3, 227, 227))
-#volatile_input = Variable(torch.randn(1, 3, 227, 227), volatile=True)
+
+def printnorm_backward(self, input, output):
+    # input is a tuple of packed inputs
+    # output is a Variable. output.data is the Tensor we are interested
+    print('Inside ' + self.__class__.__name__ + ' backward')
+    print('')
+    print('input: ', type(input))
+    print('input[0]: ', type(input[0]))
+    print('output: ', type(output))
+    print('output[0]: ', type(output[0]))
+    print('')
+    print('input size:', input[0].size())
+    print('output size:', len(output))
+    print('output[0] size:', output[0].size())
+    print('output norm:', output[0].data.norm())
+
+
+# This could be useful for using the features produced by a pretrained network
+# If all you care about is this feature vector, then use a Variable with volatile=True to speed up inference
+model.fc.register_forward_hook(printnorm_forward)
+# This could be useful to analyse the gradient of a pretrained network
+model.fc.register_backward_hook(printnorm_backward)
 
 
 optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=LR)
@@ -64,10 +96,8 @@ def train(epoch):
         data, target = Variable(data, requires_grad=True), Variable(target)
         optimizer.zero_grad()
         output = model(data)
-        #loss = F.nll_loss(output, target)
         loss = F.cross_entropy(output, target)
         loss.backward()
-        import pdb; pdb.set_trace()
         optimizer.step()
         #if batch_idx % args.log_interval == 0:
         print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
