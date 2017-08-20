@@ -7,8 +7,6 @@ import torch.utils.data as data
 from torchvision import datasets, transforms
 from torch.autograd import Variable
 
-import matplotlib
-matplotlib.use('qt5agg')
 from matplotlib import pyplot as plt
 
 
@@ -49,35 +47,43 @@ for param in model.parameters():
 model.fc = nn.Linear(2048, 2) # New layers has requires_grad = True by default
 
 
-def printnorm_forward(self, input, output):
+forward_grad = None
+def printnorm_forward(self, input_, output):
+    global forward_grad
     # input is a tuple of packed inputs
     # output is a Variable. output.data is the Tensor we are interested
     print('Inside ' + self.__class__.__name__ + ' forward')
     print('')
-    print('input: ', type(input))
-    print('input[0]: ', type(input[0]))
+    print('input: ', type(input_))
+    print('input[0]: ', type(input_[0]))
     print('output: ', type(output))
     print('output[0]: ', type(output[0]))
     print('')
-    print('input size:', input[0].size())
+    print('input size:', input_[0].size())
     print('output size:', output.data.size())
     print('output norm:', output.data.norm())
 
+    forward_grad = input_[0].data.numpy()
 
-def printnorm_backward(self, input, output):
+
+backward_grad = None
+def printnorm_backward(self, input_, output):
+    global backward_grad
     # input is a tuple of packed inputs
     # output is a Variable. output.data is the Tensor we are interested
     print('Inside ' + self.__class__.__name__ + ' backward')
     print('')
-    print('input: ', type(input))
-    print('input[0]: ', type(input[0]))
+    print('input: ', type(input_))
+    print('input[0]: ', type(input_[0]))
     print('output: ', type(output))
     print('output[0]: ', type(output[0]))
     print('')
-    print('input size:', input[0].size())
+    print('input size:', input_[0].size())
     print('output size:', len(output))
     print('output[0] size:', output[0].size())
     print('output norm:', output[0].data.norm())
+
+    backward_grad = input_[0].data.numpy()
 
 
 # This could be useful for using the features produced by a pretrained network
@@ -99,7 +105,14 @@ def train(epoch):
         loss = F.cross_entropy(output, target)
         loss.backward()
         optimizer.step()
-        #if batch_idx % args.log_interval == 0:
+
+        # Display the gradients
+        plt.clf()
+        plt.subplot(211); plt.hist(forward_grad.ravel()); plt.title("Features magnitude")
+        plt.subplot(212); plt.hist(backward_grad.ravel()); plt.title("Gradients")
+        plt.show(block=False)
+        plt.pause(0.01)
+
         print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
             epoch, batch_idx * len(data), len(train_loader.dataset),
             100. * batch_idx / len(train_loader), loss.data[0]))
@@ -108,4 +121,3 @@ def train(epoch):
 if __name__ == '__main__':
     for epoch in range(1, 2):
         train(epoch)
-
