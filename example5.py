@@ -7,7 +7,7 @@ from torchvision import datasets, transforms
 from torch.autograd import Variable
 
 
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 NUM_WORKERS = 1
 LR = 1e-3
 
@@ -56,7 +56,6 @@ class Net(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
         x = self.fc2(x)
-        #x = self.fc3(x)
         return F.log_softmax(x)
 
 
@@ -70,11 +69,9 @@ def train(epoch):
         data, target = Variable(data), Variable(target)
         optimizer.zero_grad()
         output = model(data)
-        #loss = F.nll_loss(output, target)
         loss = F.cross_entropy(output, target)
         loss.backward()
         optimizer.step()
-        #if batch_idx % args.log_interval == 0:
         print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
             epoch, batch_idx * len(data), len(train_loader.dataset),
             100. * batch_idx / len(train_loader), loss.data[0]))
@@ -83,4 +80,3 @@ def train(epoch):
 if __name__ == '__main__':
     for epoch in range(1, 2):
         train(epoch)
-
