@@ -7,8 +7,6 @@ import torch.utils.data as data
 from torchvision import datasets, transforms
 from torch.autograd import Variable
 
-import matplotlib
-matplotlib.use('qt5agg')
 from matplotlib import pyplot as plt
 
 
@@ -40,7 +38,6 @@ train_loader = data.DataLoader(
 
 # Definition here: https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
 model = models.resnet50(pretrained=True)
-import pdb; pdb.set_trace()
 
 # Don't train the normal layers
 for param in model.parameters():
@@ -61,7 +58,7 @@ optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr
 def train(epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = Variable(data, requires_grad=True), Variable(target)
+        data, target = Variable(data), Variable(target)
         optimizer.zero_grad()
         output = model(data)
         #loss = F.nll_loss(output, target)
@@ -69,7 +66,6 @@ def train(epoch):
         loss.backward()
         import pdb; pdb.set_trace()
         optimizer.step()
-        #if batch_idx % args.log_interval == 0:
         print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
             epoch, batch_idx * len(data), len(train_loader.dataset),
             100. * batch_idx / len(train_loader), loss.data[0]))
