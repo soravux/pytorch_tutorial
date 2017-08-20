@@ -47,7 +47,7 @@ def myGradientHook(grad):
     print(grad_np)
     print("Gradient shape:")
     print(grad_np.shape)
-    
+
     # Gradients are also writable in the last stable version!
     grad[0,:] = 0
 
@@ -87,7 +87,7 @@ def train(epoch):
 
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = Variable(data, requires_grad=True), Variable(target)
+        data, target = Variable(data), Variable(target)
         optimizer.zero_grad()
         output = model(data)
         loss = F.nll_loss(output, target)
