@@ -51,8 +51,6 @@ def myGradientHook(grad):
     # Gradients are also writable in the last stable version!
     grad[0,:] = 0
 
-    #import pdb; pdb.set_trace()
-
 
 class Net(nn.Module):
     def __init__(self):
@@ -89,7 +87,6 @@ def train(epoch):
 
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
-        # 1. Add requires_grad so Torch doesn't erase the gradient with its optimization pass
         data, target = Variable(data, requires_grad=True), Variable(target)
         optimizer.zero_grad()
         output = model(data)
