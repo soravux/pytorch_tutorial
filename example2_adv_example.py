@@ -91,7 +91,8 @@ def train(epoch):
             if epoch > 2:
                 # 3. Let's plot it, because we can!
                 plt.clf()
-                plt.imshow(adversarial_example[0,0,...]); plt.colorbar()
+                plt.subplot(121); plt.imshow(data.data.numpy()[0,0,...], cmap='gray_r')
+                plt.subplot(122); plt.imshow(adversarial_example[0,0,...]); plt.colorbar()
                 plt.show(block=False)
                 plt.pause(0.01)
 
