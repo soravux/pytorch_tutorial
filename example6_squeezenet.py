@@ -46,7 +46,7 @@ test_loader = data.DataLoader(
     num_workers=NUM_WORKERS)
 
 
-# Definition here: https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
+# Definition here: https://github.com/pytorch/vision/blob/master/torchvision/models/squeezenet.py
 model = models.squeezenet1_1(pretrained=True)
 
 # Don't train the normal layers
@@ -54,6 +54,7 @@ for param in model.parameters():
     param.requires_grad = False
 
 
+# Create a new output layer
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -68,9 +69,9 @@ class Net(nn.Module):
         x = x.squeeze(dim=3).squeeze(dim=2)
         return x
 
-# Create a new output layer
 model.classifier = Net()
 model.num_classes = 2
+
 
 optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=LR)
 

@@ -8,7 +8,9 @@ from torchvision import datasets, transforms
 from torch.autograd import Variable
 
 
-# Training settings
+###################################################################
+# Settings ########################################################
+###################################################################
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 64)')
@@ -32,6 +34,10 @@ if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
 
+
+###################################################################
+# Dataset handling ################################################
+###################################################################
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 train_loader = torch.utils.data.DataLoader(
     datasets.MNIST('./data', train=True, download=True,
@@ -48,6 +54,9 @@ test_loader = torch.utils.data.DataLoader(
     batch_size=args.batch_size, shuffle=True, **kwargs)
 
 
+###################################################################
+# Architecture definition #########################################
+###################################################################
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -75,6 +84,9 @@ if args.cuda:
 optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
 
+###################################################################
+# Training and evaluation loops ###################################
+###################################################################
 def train(epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
