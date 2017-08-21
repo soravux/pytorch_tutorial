@@ -1,13 +1,11 @@
 import os
+
 import torchvision.models as models
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-import torch.utils.data as data
-from torchvision import datasets, transforms
+from torchvision import transforms
 from torch.autograd import Variable
-from PIL import Image
 
+from PIL import Image
 from matplotlib import pyplot as plt
 
 
