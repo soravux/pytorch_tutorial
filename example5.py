@@ -29,8 +29,18 @@ train_loader = data.DataLoader(
                          ])),
     batch_size=BATCH_SIZE,
     shuffle=True,
-    num_workers=NUM_WORKERS,
-    pin_memory=False)
+    num_workers=NUM_WORKERS)
+test_loader = data.DataLoader(
+    datasets.ImageFolder(testdir,
+                         transforms.Compose([
+                             transforms.RandomSizedCrop(224),
+                             transforms.RandomHorizontalFlip(),
+                             transforms.ToTensor(),
+                             normalize,
+                         ])),
+    batch_size=200,
+    shuffle=True,
+    num_workers=NUM_WORKERS)
 
 
 class Net(nn.Module):
@@ -52,7 +62,7 @@ class Net(nn.Module):
         x = F.elu(F.max_pool2d(self.bn3(self.conv3(x)), 2))
         x = F.elu(F.max_pool2d(self.bn4(self.conv4(x)), 2))
 
-        x = x.view(BATCH_SIZE, 750)
+        x = x.view(-1, 750)
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
         x = self.fc2(x)
@@ -77,6 +87,25 @@ def train(epoch):
             100. * batch_idx / len(train_loader), loss.data[0]))
 
 
+def test():
+    model.eval()
+    test_loss = 0
+    correct = 0
+    for batch_idx, (data, target) in enumerate(test_loader):
+        data, target = Variable(data, volatile=True), Variable(target)
+        output = model(data)
+        test_loss += F.cross_entropy(output, target, size_average=False).data[0] # sum up batch loss
+        pred = output.data.max(1)[1] # get the index of the max log-probability
+        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+
+    test_loss /= len(test_loader.dataset)
+    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+        test_loss, correct, len(test_loader.dataset),
+        100. * correct / len(test_loader.dataset)))
+
+
 if __name__ == '__main__':
     for epoch in range(1, 2):
         train(epoch)
+    print("Running test...")
+    test()
