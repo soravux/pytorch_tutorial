@@ -109,3 +109,4 @@ if __name__ == '__main__':
         train(epoch)
     print("Running test...")
     test()
+    # 1 epoch gives 63% accuracy in 12 minutes, 2 epochs 71% in 25 minutes
