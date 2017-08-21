@@ -1,6 +1,6 @@
 Welcome to Université Laval's CVSL PyTorch tutorial!
 
-The goal of this tutorial is to give a quick overview of PyTorch to computer vision, graphics and machine learning researchers. The target audience is people already accustomed with basic neural network theory and with some other neural networks like Keras+Tensorflow, Theano, Caffe and the like. We cover the basic PyTorch features that allows tinkering, tweaking and understanding alongside inference and training.
+The goal of this tutorial is to give a quick overview of PyTorch to computer vision, graphics and machine learning researchers. It targets people already accustomed with basic neural network theory and with some other neural networks frameworks like Keras+Tensorflow, Theano, Caffe and the like. We cover the basic PyTorch features that allows tinkering, tweaking and understanding alongside inference and training.
 
 This repository is a companion for a 90 minutes long presentation in an execute-along format for the attendees. Two datasets are used, MNIST (vanilla from `torchvision`) and the [Kaggle's Dogs vs Cats Redux](https://www.kaggle.com/c/dogs-vs-cats-redux-kernels-edition) dataset, with the folder hierarchy changed to fit [`torchvision`'s ImageFolder](https://github.com/pytorch/vision) hierarchy. The data already prepared can be found [here](goo.gl/FpjJ7K).
 
