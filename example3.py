@@ -117,10 +117,12 @@ def test():
 
 if __name__ == "__main__":
     # 2. Reload the model if asked
+    beginEpoch = 1
     if args.checkpoint:
         model.load_state_dict(torch.load(args.checkpoint))
+        beginEpoch = int(args.checkpoint.split("_")[-1][:3])
 
-    for epoch in range(1, args.epochs + 1):
+    for epoch in range(beginEpoch, args.epochs + 1):
         train(epoch)
 
     test()
