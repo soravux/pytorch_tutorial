@@ -7,8 +7,6 @@ import torch.utils.data as data
 from torchvision import datasets, transforms
 from torch.autograd import Variable
 
-from matplotlib import pyplot as plt
-
 
 BATCH_SIZE = 4
 NUM_WORKERS = 1
