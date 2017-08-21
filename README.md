@@ -48,3 +48,9 @@ All the examples in presentation order:
   * [Example 6 (SqueezeNet-1.1)](https://github.com/soravux/pytorch_tutorial/blob/master/example6_squeezenet.py): Finetuning pretrained squeezenet 1.1 on the cats and dogs dataset. 93% accuracy in a single epoch (13 minutes on CPU).
   * [Example 6 (gradients)](https://github.com/soravux/pytorch_tutorial/blob/master/example6_gradient.py): How to set a backward hook to get gradients and foward hooks to get features on a pretrained network.
   * [Example 6 (feature extractor)](https://github.com/soravux/pytorch_tutorial/blob/master/example6_features.py): Resnet-50 feature extractor on images loaded using PIL.
+
+
+Contributing
+------------
+
+You are welcome to propose pull requests to this repository on github!
