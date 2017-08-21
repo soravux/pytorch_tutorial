@@ -82,9 +82,6 @@ optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
 
 def train(epoch):
-    if epoch > 2:
-        import pdb; pdb.set_trace()
-
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = Variable(data), Variable(target)
