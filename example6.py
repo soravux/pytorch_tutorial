@@ -97,3 +97,4 @@ if __name__ == '__main__':
         train(epoch)
     print("Running test...")
     test()
+    # 95% accuracy for 1 epoch
