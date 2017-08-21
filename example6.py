@@ -10,7 +10,7 @@ from torch.autograd import Variable
 from matplotlib import pyplot as plt
 
 
-BATCH_SIZE = 4
+BATCH_SIZE = 32
 NUM_WORKERS = 1
 LR = 1e-3
 
@@ -32,8 +32,18 @@ train_loader = data.DataLoader(
                          ])),
     batch_size=BATCH_SIZE,
     shuffle=True,
-    num_workers=NUM_WORKERS,
-    pin_memory=False)
+    num_workers=NUM_WORKERS)
+test_loader = data.DataLoader(
+    datasets.ImageFolder(testdir,
+                         transforms.Compose([
+                             transforms.RandomSizedCrop(224),
+                             transforms.RandomHorizontalFlip(),
+                             transforms.ToTensor(),
+                             normalize,
+                         ])),
+    batch_size=50,
+    shuffle=True,
+    num_workers=NUM_WORKERS)
 
 
 # Definition here: https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
@@ -43,13 +53,9 @@ model = models.resnet50(pretrained=True)
 for param in model.parameters():
     param.requires_grad = False
 
+
 # Create a new output layer
 model.fc = nn.Linear(2048, 2) # New layers has requires_grad = True by default
-
-
-
-#regular_input = Variable(torch.randn(1, 3, 227, 227))
-#volatile_input = Variable(torch.randn(1, 3, 227, 227), volatile=True)
 
 
 optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=LR)
@@ -61,17 +67,33 @@ def train(epoch):
         data, target = Variable(data), Variable(target)
         optimizer.zero_grad()
         output = model(data)
-        #loss = F.nll_loss(output, target)
         loss = F.cross_entropy(output, target)
         loss.backward()
-        import pdb; pdb.set_trace()
         optimizer.step()
         print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
             epoch, batch_idx * len(data), len(train_loader.dataset),
             100. * batch_idx / len(train_loader), loss.data[0]))
 
 
+def test():
+    model.eval()
+    test_loss = 0
+    correct = 0
+    for batch_idx, (data, target) in enumerate(test_loader):
+        data, target = Variable(data, volatile=True), Variable(target)
+        output = model(data)
+        test_loss += F.cross_entropy(output, target, size_average=False).data[0] # sum up batch loss
+        pred = output.data.max(1)[1] # get the index of the max log-probability
+        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+
+    test_loss /= len(test_loader.dataset)
+    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+        test_loss, correct, len(test_loader.dataset),
+        100. * correct / len(test_loader.dataset)))
+
+
 if __name__ == '__main__':
     for epoch in range(1, 2):
         train(epoch)
-
+    print("Running test...")
+    test()
