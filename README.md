@@ -29,7 +29,7 @@ Requirements
 
 All the examples were developed for PyTorch 0.1 and 0.2 on Python 3.5 and 3.6 .
 
-For the last examples, the [cats vs dogs redux](goo.gl/FpjJ7K) dataset is needed.
+For the last examples, the [cats vs dogs redux](http://goo.gl/FpjJ7K) dataset is needed.
 
 List of examples
 ----------------
