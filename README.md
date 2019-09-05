@@ -49,6 +49,8 @@ All the examples in presentation order:
   * [Example 6 (gradients)](https://github.com/soravux/pytorch_tutorial/blob/master/example6_gradient.py): How to set a backward hook to get gradients and foward hooks to get features on a pretrained network. Displays some gradients live using matplotlib.
   * [Example 6 (feature extractor)](https://github.com/soravux/pytorch_tutorial/blob/master/example6_features.py): Resnet-50 feature extractor on images loaded using PIL. Displays some features live using matplotlib.
 
+Here is the output from `example6_features.py`:
+![Feature vector example](readme_images/example6_features.png "Feature vector example")
 
 Contributing
 ------------
