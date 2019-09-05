@@ -1,20 +1,47 @@
 import os
+import random
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data as data
 from torchvision import datasets, transforms
-from torch.autograd import Variable
 
+random.seed(31415926)
 
 BATCH_SIZE = 16
 NUM_WORKERS = 1
 LR = 1e-3
 
-data_folder = "./cats_and_dogs"
+data_folder = "cats_and_dogs"
 
 traindir = os.path.join(data_folder, 'train')
 testdir = os.path.join(data_folder, 'test')
+
+if not os.path.isdir(traindir):
+    raise Exception('Please download the cats and dogs dataset and put it '
+                    'into the ./cats_and_dogs/ folder.')
+
+# Change the folder structure of the dataset, if ran for the first time
+if not os.path.isdir(os.path.join(traindir, "cat")):
+    print("Reorganizing the dataset...")
+    from glob import glob
+    import shutil
+    from itertools import product
+    for folder in product([traindir, testdir], ["cat", "dog"]):
+        os.makedirs(os.path.join(*folder), exist_ok=True)
+    for f in glob(os.path.join(traindir, "*.jpg")):
+        folder, rest = f.split(".", maxsplit=1)
+        if random.random() < 0.04:
+            folder = folder.replace(traindir, testdir)
+        shutil.move(f, os.path.join(folder, rest))
+
+
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+torch.manual_seed(31415926)
+if 'cuda' in str(device):
+    torch.cuda.manual_seed(31415926)
 
 
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -22,7 +49,7 @@ normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 
 train_loader = data.DataLoader(
     datasets.ImageFolder(traindir,
                          transforms.Compose([
-                             transforms.RandomSizedCrop(224),
+                             transforms.RandomResizedCrop(224),
                              transforms.RandomHorizontalFlip(),
                              transforms.ToTensor(),
                              normalize,
@@ -33,7 +60,7 @@ train_loader = data.DataLoader(
 test_loader = data.DataLoader(
     datasets.ImageFolder(testdir,
                          transforms.Compose([
-                             transforms.RandomSizedCrop(224),
+                             transforms.RandomResizedCrop(224),
                              transforms.RandomHorizontalFlip(),
                              transforms.ToTensor(),
                              normalize,
@@ -66,17 +93,18 @@ class Net(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
         x = self.fc2(x)
-        return F.log_softmax(x)
+        return F.log_softmax(x, dim=1)
 
 
 model = Net()
+model = model.to(device)
 optimizer = optim.Adam(model.parameters(), lr=LR)
 
 
 def train(epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = Variable(data), Variable(target)
+        data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
         loss = F.cross_entropy(output, target)
@@ -84,19 +112,20 @@ def train(epoch):
         optimizer.step()
         print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
             epoch, batch_idx * len(data), len(train_loader.dataset),
-            100. * batch_idx / len(train_loader), loss.data[0]))
+            100. * batch_idx / len(train_loader), loss.item()))
 
 
 def test():
     model.eval()
     test_loss = 0
     correct = 0
-    for batch_idx, (data, target) in enumerate(test_loader):
-        data, target = Variable(data, volatile=True), Variable(target)
-        output = model(data)
-        test_loss += F.cross_entropy(output, target, size_average=False).data[0] # sum up batch loss
-        pred = output.data.max(1)[1] # get the index of the max log-probability
-        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+    with torch.no_grad():
+        for batch_idx, (data, target) in enumerate(test_loader):
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            test_loss += F.cross_entropy(output, target, reduction='sum').item() # sum up batch loss
+            pred = output.data.max(1)[1] # get the index of the max log-probability
+            correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
     test_loss /= len(test_loader.dataset)
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
@@ -105,8 +134,8 @@ def test():
 
 
 if __name__ == '__main__':
-    for epoch in range(1, 2):
+    for epoch in range(1, 3):
         train(epoch)
     print("Running test...")
     test()
-    # 1 epoch gives 63% accuracy in 12 minutes, 2 epochs 71% in 25 minutes
+    # 1 epoch gives 66% accuracy in 12 minutes on CPU

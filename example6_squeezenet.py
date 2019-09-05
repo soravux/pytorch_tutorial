@@ -1,29 +1,34 @@
 import os
-import torchvision.models as models
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data as data
+import torchvision.models as models
 from torchvision import datasets, transforms
-from torch.autograd import Variable
 
 
 BATCH_SIZE = 32
 NUM_WORKERS = 1
 LR = 1e-3
 
-data_folder = "./cats_and_dogs"
+data_folder = "cats_and_dogs"
 
 traindir = os.path.join(data_folder, 'train')
 testdir = os.path.join(data_folder, 'test')
 
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+torch.manual_seed(31415926)
+if 'cuda' in str(device):
+    torch.cuda.manual_seed(31415926)
 
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
 train_loader = data.DataLoader(
     datasets.ImageFolder(traindir,
                          transforms.Compose([
-                             transforms.RandomSizedCrop(224),
+                             transforms.RandomResizedCrop(224),
                              transforms.RandomHorizontalFlip(),
                              transforms.ToTensor(),
                              normalize,
@@ -34,7 +39,7 @@ train_loader = data.DataLoader(
 test_loader = data.DataLoader(
     datasets.ImageFolder(testdir,
                          transforms.Compose([
-                             transforms.RandomSizedCrop(224),
+                             transforms.RandomResizedCrop(224),
                              transforms.RandomHorizontalFlip(),
                              transforms.ToTensor(),
                              normalize,
@@ -50,7 +55,6 @@ model = models.squeezenet1_1(pretrained=True)
 # Don't train the normal layers
 for param in model.parameters():
     param.requires_grad = False
-
 
 # Create a new output layer
 class Net(nn.Module):
@@ -70,6 +74,7 @@ class Net(nn.Module):
 model.classifier = Net()
 model.num_classes = 2
 
+model = model.to(device)
 
 optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=LR)
 
@@ -77,7 +82,7 @@ optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr
 def train(epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = Variable(data), Variable(target)
+        data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
         loss = F.cross_entropy(output, target)
@@ -85,19 +90,20 @@ def train(epoch):
         optimizer.step()
         print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
             epoch, batch_idx * len(data), len(train_loader.dataset),
-            100. * batch_idx / len(train_loader), loss.data[0]))
+            100. * batch_idx / len(train_loader), loss.item()))
 
 
 def test():
     model.eval()
     test_loss = 0
     correct = 0
-    for batch_idx, (data, target) in enumerate(test_loader):
-        data, target = Variable(data, volatile=True), Variable(target)
-        output = model(data)
-        test_loss += F.cross_entropy(output, target, size_average=False).data[0] # sum up batch loss
-        pred = output.data.max(1)[1] # get the index of the max log-probability
-        correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+    with torch.no_grad():
+        for batch_idx, (data, target) in enumerate(test_loader):
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            test_loss += F.cross_entropy(output, target, reduction='sum').item() # sum up batch loss
+            pred = output.data.max(1)[1] # get the index of the max log-probability
+            correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
     test_loss /= len(test_loader.dataset)
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
